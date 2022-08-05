@@ -37,6 +37,10 @@ Address is NOT within CIDR
 1
 ```
 
+# License
+
+This tool is released under the MIT license. See the LICENSE file in this repo for details.
+
 # Built With
 
 * [Python](https://www.python.org) designed by Guido van Rossum
