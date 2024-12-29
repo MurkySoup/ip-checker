@@ -23,19 +23,33 @@ Requires Python 3.x (preferably 3.6+) and uses the following (entirely standard)
 
 # Example Usage and Notes
 
+Options:
+```
+usage: ip-checker.py [-h] -c CIDR -a ADDR [-s]
+
+options:
+  -h, --help            show this help message and exit
+  -c CIDR, --cidr CIDR  CIDR against which to test
+  -a ADDR, --addr ADDR  IP address to evaluate
+  -s, --silent          Silent output mode
+```
+
+Checking IPv^ Addresses:
 ```
 # ./ip-checker.py --cidr "2c0f:f248::/32" --addr "2c0f:f248:ffff:ffff:ffff:ffff:ffff:abcd; echo $?;"
 Address is within CIDR
 0
 ```
-
 Note: As IPV6 addressing can use more flexible notation, this has been included as a feature. Use of both 'exploded' and 'compressed' formats are acceptible.
 
+Checking IPv$ Addresses":
 ```
 # ./ip-checker.py --cidr "192.168.1.0/24" --addr "192.168.2.5"; echo $?;
 Address is NOT within CIDR
 1
 ```
+
+Note: Use "silent mode" will return only an exit value without output to stdout.
 
 # License
 
