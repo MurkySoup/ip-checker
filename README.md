@@ -4,7 +4,7 @@ A simple tool to confirm/deny that a given IP address falls within a given CIDR.
 
 # Description
 
-As IPV6 key spaces are ridiculously over-sized, iteration over a given CIDR is not feasible. Instead, we reduce this problem to a matter of simple, fast arithmetic checks.
+As IP address spaces are rather large (IPv6 is ridiculously over-sized), iteration over a given CIDR is neither efficient nor even feasible in some cases. Instead, we reduce this problem to a matter of simple, fast arithmetic checks, just as nature intended.
 
 Basic features:
 * Compatible with IPv4 or IPV6 inputs.
@@ -16,7 +16,7 @@ All source code is written for clarity and maintainability and should be mostly 
 
 # Prerequisites
 
-Requires Python 3.x (preferably 3.6+) and uses the following (entirely standard) libraries:
+Requires Python 3.x (preferably 3.7+) and uses the following (entirely standard) libraries:
 * sys
 * ipaddress
 * argparse
