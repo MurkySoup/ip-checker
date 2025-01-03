@@ -7,7 +7,7 @@ A simple tool to confirm/deny that a given IP address falls within a given CIDR.
 As IP address spaces are rather large (IPv6 is ridiculously over-sized), iteration over a given CIDR is neither efficient nor even feasible in some cases. Instead, we reduce this problem to a matter of simple, fast arithmetic checks, just as nature intended.
 
 Basic features:
-* Compatible with IPv4 or IPV6 inputs.
+* Compatible with IPv4 or IPv6 inputs (will auto-detect, even).
 * Will return (standard) exit values of '0' if true/success or '1' if false/fail.
 * Silent mode will give no output, yielding only exit codes.
 * Intended for easy inclusion into other scripting frameworks and worflows.
