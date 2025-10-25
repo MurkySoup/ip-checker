@@ -16,7 +16,8 @@ All source code is written for clarity and maintainability and should be mostly 
 
 # Prerequisites
 
-Requires Python 3.x (preferably 3.7+) and uses the following (entirely standard) libraries:
+Requires Python 3.x (preferably 3.11+) and uses the following (entirely standard) libraries:
+* annotations (future)
 * sys
 * ipaddress
 * argparse

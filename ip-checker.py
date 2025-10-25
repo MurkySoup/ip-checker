@@ -1,87 +1,209 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 
 """
-IP-Finder, Version 0.4 (Do Not Distribute)
-Confirms/denies that a given ip address falls within a target ICDR.
+IP Checker, Version 1.0-Beta (Do Not Distribute)
+Find a given address within a given CIDR
 By Rick Pelletier (galiagante@gmail.com) - 04 August 2022
-Last Update: 01 April 2023
+Last Update: 25 October 2025
+
+The script accepts a CIDR string and an IPv4 (or IPv6) address from the command
+line and reports whether the address is in the block.  It can operate in a
+"silent" mode where no output is produced and the exit status is the only signal
+to the caller.
 
 Example usage:
 
 # ./ip-checker.py --cidr "2c0f:f248::/32" --addr "2c0f:f248:ffff:ffff:ffff:ffff:ffff:abcd"
 # ./ip-checker.py --cidr "192.168.1.0/24" --addr "192.168.1.5"
 
-Features:
-- Compatible with IPv4 or IPv6 inputs.
-- Will return (standard) exit values of '0' if true/success or '1' if false/fail.
-- Silent mode will give no output, yielding only exit codes.
+For reference - RFC-1918 Reserved Networks:
+- Class A: 10.0.0.0    - 10.255.255.255  -> 10.0.0.0/8
+- Class B: 172.16.0.0  - 172.31.255.255  -> 172.16.0.0/12
+- Class C: 192.168.0.0 - 192.168.255.255 -> 192.168.0.0/16
+- Note: Class C Reserved networks are typically used as /24 subnets
 
-The changes made to this version are:
-1. Reorganizing the code to have a more clear structure, including defining functions for
-   validating the CIDR and IP address.
-2. Simplifying the calculations for the start and end values of the IP range by using the
-   network_address and broadcast_address properties of the 'ipaddress.IPv4Network' and
-   'ipaddress.IPv6Network' classes.
-3. Simplifying the logic for checking if the IP address is within the CIDR range by using
-   the Python comparison operator <=.
-4. Removing unnecessary code at the end of the script, where sys.exit(0) was called twice.
+Linter: ruff check ip-checker-new.py --extend-select F,B,UP
 """
 
-
+from __future__ import annotations
+import argparse
 import sys
 import ipaddress
-import argparse
 
+# --------------------------------------------------------------------------- #
+# Core helpers
+# --------------------------------------------------------------------------- #
 
-def validate_cidr(cidr):
+def validate_cidr(cidr: str) -> ipaddress.IPv4Network:
+    """
+    Parse *cidr* into an :class:ipaddress.IPv4Network instance.
+
+    Parameters
+    ----------
+    cidr : str
+        The CIDR string to validate, e.g. "192.168.0.0/24".
+
+    Returns
+    -------
+    ipaddress.IPv4Network
+        The parsed network.
+
+    Raises
+    ------
+    ValueError
+        If the supplied string is not a valid IPv4 CIDR.
+    """
     try:
-        ipn = ipaddress.ip_network(cidr)
-        return True, ipn
-    except ValueError:
-        return False, None
+        return ipaddress.ip_network(cidr, strict=True)
+    except ValueError as exc:
+        raise ValueError(exc) from exc
 
 
-def validate_address(addr):
+def validate_address(addr: str) -> ipaddress.IPv4Address:
+    """
+    Parse *addr* into an :class:ipaddress.IPv4Address instance.
+
+    Parameters
+    ----------
+    addr : str
+        The IPv4 address string to validate, e.g. "192.168.0.42".
+
+    Returns
+    -------
+    ipaddress.IPv4Address
+        The parsed address.
+
+    Raises
+    ------
+    ValueError
+        If the supplied string is not a valid IPv4 address.
+    """
     try:
-        return True, int(ipaddress.ip_address(addr))
-    except ValueError:
-        return False, None
+        return ipaddress.ip_address(addr)
+    except ValueError as exc:
+        raise ValueError(exc) from exc
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--cidr', type=str, required=True, help='CIDR against which to test')
-    parser.add_argument('-a', '--addr', type=str, required=True, help='IP address to evaluate')
-    parser.add_argument('-s', '--silent', required=False, action='store_false', help='Silent output mode')
-    args = parser.parse_args()
+def is_address_in_cidr(network: ipaddress.IPv4Network,
+                       address: ipaddress.IPv4Address) -> bool:
+    """
+    Determine whether *address* belongs to *network*.
 
-    # validate given cidr and target/test ip address
-    cidr_valid, ipn = validate_cidr(args.cidr)
-    addr_valid, test_value = validate_address(args.addr)
+    Parameters
+    ----------
+    network : ipaddress.IPv4Network
+        The network to test against.
+    address : ipaddress.IPv4Address
+        The address to test.
 
-    if not cidr_valid:
-        if args.silent:
-            print('Invalid CIDR given')
+    Returns
+    -------
+    bool
+        True if *address* is inside *network*, otherwise False.
+    """
+    return address in network
+
+# --------------------------------------------------------------------------- #
+# Command‑line handling
+# --------------------------------------------------------------------------- #
+
+def build_parser() -> argparse.ArgumentParser:
+    """
+    Construct the :class:argparse.ArgumentParser for this script.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        The fully configured parser.
+    """
+    parser = argparse.ArgumentParser(
+        description="Check if an IPv4 or IPv6 address lies inside a given CIDR block."
+    )
+    parser.add_argument(
+        "-c",
+        "--cidr",
+        required=True,
+        help="CIDR block to test against (e.g. 192.168.0.0/24)",
+    )
+    parser.add_argument(
+        "-a",
+        "--addr",
+        required=True,
+        help="IPv4 address to evaluate (e.g. 192.168.0.1)",
+    )
+    parser.add_argument(
+        "-s",
+        "--silent",
+        action="store_true",
+        help="Do not print any output – only the exit status indicates the result",
+    )
+    return parser
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """
+    Parse command‑line arguments.
+
+    Parameters
+    ----------
+    argv : list[str] | None, optional
+        The list of arguments to parse.  If None (the default) the arguments
+        are taken from sys.argv[1:].
+
+    Returns
+    -------
+    argparse.Namespace
+        The parsed arguments.
+
+    Raises
+    ------
+    SystemExit
+        If the user supplied invalid options.
+    """
+    parser = build_parser()
+    return parser.parse_args(argv)
+
+# --------------------------------------------------------------------------- #
+# Main entry point
+# --------------------------------------------------------------------------- #
+
+def main(argv: list[str] | None = None) -> None:
+    """
+    The script’s main routine.
+
+    Parameters
+    ----------
+    argv : list[str] | None, optional
+        Arguments to parse.  If None the real sys.argv are used.
+
+    Exits
+    ------
+    int
+        Exit code 0 if the address is inside the CIDR, 1 otherwise.  In silent
+        mode the exit code is still returned; no output is printed.
+    """
+    try:
+        args = parse_args(argv)
+        network = validate_cidr(args.cidr)
+        address = validate_address(args.addr)
+        inside = is_address_in_cidr(network, address)
+    except (ValueError, RuntimeError) as exc:
+        print(exc, file=sys.stderr)
         sys.exit(1)
 
-    if not addr_valid:
-        if args.silent:
-            print('Invalid IP address given')
-        sys.exit(1)
+    if not args.silent:
+        print(
+            "Address is within CIDR" if inside else "Address is NOT within CIDR"
+        )
 
-    # a simple arithmetic check will answer the question
-    start_value = int(ipn.network_address)
-    end_value = int(ipn.broadcast_address) + 1
+    # The exit status encodes the result for scripts / CI pipelines
+    sys.exit(0 if inside else 1)
 
-    if start_value <= test_value <= end_value:
-        if args.silent:
-            print('Address is within CIDR')
-        sys.exit(0)
-    else:
-        if args.silent:
-            print('Address is NOT within CIDR')
-        sys.exit(1)
+# --------------------------------------------------------------------------- #
+# Standard module guard
+# --------------------------------------------------------------------------- #
+
+if __name__ == "__main__":          # pragma: no cover
+    main()
 
 # end of script
