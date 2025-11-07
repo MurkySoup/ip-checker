@@ -1,6 +1,6 @@
 # ip-checker
 
-A simple tool to confirm/deny that a given IP address falls within a given CIDR.
+Tools to confirm/deny that a given IP address(es) falls within a given CIDR(s).
 
 # Description
 
@@ -51,6 +51,45 @@ Address is NOT within CIDR
 ```
 
 Note: Use "silent mode" will return only an exit value without output to stdout.
+
+Facing the question of matching a potentially large number of IP addresses against a set of CIDR's, a search tool using radix-tree data search techniques has been written to answer this challenge efficiently.
+
+```
+Usage:
+# ./asn-radix-search.py [ASN Number] [IP Address List File]
+
+# ./asn-radix-search.py AS15169 big_ip_list.txt
+```
+Example:
+```
+# time ./asn-radix-search.py --asn AS46887 --file ip-list.1
+
+Loading IPs from ip-list.1...
+Loaded 8278 IP addresses.
+Attempting to fetch CIDRs for ASN AS46887...
+Successfully retrieved 2197 CIDRs for AS46887.
+
+Building Radix Tree from fetched CIDR list...
+Successfully loaded 2197 CIDRs into the tree.
+Starting efficient IP lookup...
+
+==================================================
+RESULTS: IPs from 'ip-list.1' matching ASN AS46887
+==================================================
+
+Matched IPs:
+  IP: 104.207.193.226 matches CIDR: 104.207.192.0/23
+  IP: 104.207.208.251 matches CIDR: 104.207.208.0/23
+  IP: 184.75.193.78 matches CIDR: 184.75.192.0/20
+
+Summary:
+Total IPs checked: 8278
+Total matches found: 3
+
+real    0m1.673s
+user    0m0.082s
+sys     0m0.047s
+```
 
 # License
 
