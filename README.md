@@ -16,13 +16,17 @@ All source code is written for clarity and maintainability and should be mostly 
 
 # Prerequisites
 
-Requires Python 3.x (preferably 3.11+) and uses the following (entirely standard) libraries:
-* annotations (future)
-* sys
-* ipaddress
-* argparse
+Requires Python 3.x (preferably 3.11+) and uses the following libraries:
 
-# Example Usage and Notes
+* annotations (future)
+* argparse
+* ipaddress
+* os
+* re
+* socket
+* collections.abc
+
+# Single Address Searches
 
 Options:
 ```
@@ -52,44 +56,55 @@ Address is NOT within CIDR
 
 Note: Use "silent mode" will return only an exit value without output to stdout.
 
-Facing the question of matching a potentially large number of IP addresses against a set of CIDR's, a search tool using radix-tree data search techniques has been written to answer this challenge efficiently.
+# Bulk Searches
+
+Facing the issue of matching a potentially large number of IP addresses against a set of CIDR's, a search tool (using radix-tree data search techniques) has been written to answer this challenge efficiently.
 
 ```
-Usage:
-# ./asn-radix-search.py [ASN Number] [IP Address List File]
+usage: asn-radix-search-dev.py [-h] (--asn ASN | --cidr-file CIDR_FILE) --ip-file IP_FILE [--verbose]
 
-# ./asn-radix-search.py AS15169 big_ip_list.txt
+Efficiently match IPs to CIDRs using a Radix tree.
+
+options:
+  -h, --help                           show this help message and exit
+  --asn ASN, -a ASN                    Target ASN (e.g. AS15169 or 15169)
+  --cidr-file CIDR_FILE, -c CIDR_FILE  Path to a file containing CIDRs (one per line).
+  --ip-file IP_FILE, -i IP_FILE        Path to file containing IP addresses (one per line).
+  --verbose, -v                        Enable verbose output.
 ```
+
 Example:
+
 ```
-# time ./asn-radix-search.py --asn AS46887 --file ip-list.1
+$ ./asn-radix-search.py --cidr-file cidrs.txt --ip-file addresses.txt
 
-Loading IPs from ip-list.1...
-Loaded 8278 IP addresses.
-Attempting to fetch CIDRs for ASN AS46887...
-Successfully retrieved 2197 CIDRs for AS46887.
+============================================================
+RESULTS: IPs from 'addresses.txt' matching CIDR(s)
+============================================================
 
-Building Radix Tree from fetched CIDR list...
-Successfully loaded 2197 CIDRs into the tree.
-Starting efficient IP lookup...
-
-==================================================
-RESULTS: IPs from 'ip-list.1' matching ASN AS46887
-==================================================
-
-Matched IPs:
-  IP: 104.207.193.226 matches CIDR: 104.207.192.0/23
-  IP: 104.207.208.251 matches CIDR: 104.207.208.0/23
-  IP: 184.75.193.78 matches CIDR: 184.75.192.0/20
+Matched IPs (15):
+  IP: 184.75.73.26 matches CIDR: 184.75.73.0/24
+  IP: 209.221.34.144 matches CIDR: 209.221.34.128/26
+  IP: 209.221.34.151 matches CIDR: 209.221.34.128/26
+  IP: 209.97.12.123 matches CIDR: 209.97.12.0/23
+  IP: 45.43.109.148 matches CIDR: 45.43.109.128/25
+  IP: 45.43.109.187 matches CIDR: 45.43.109.128/25
+  IP: 45.43.109.229 matches CIDR: 45.43.109.128/25
+  IP: 50.212.215.121 matches CIDR: 50.212.215.0/24
+  IP: 50.212.215.153 matches CIDR: 50.212.215.0/24
+  IP: 66.76.178.10 matches CIDR: 66.76.178.0/24
+  IP: 66.76.178.249 matches CIDR: 66.76.178.0/24
+  IP: 66.76.178.72 matches CIDR: 66.76.178.0/24
+  IP: 66.76.178.78 matches CIDR: 66.76.178.0/24
+  IP: 66.76.178.94 matches CIDR: 66.76.178.0/24
+  IP: 96.245.46.3 matches CIDR: 96.245.46.0/24
 
 Summary:
-Total IPs checked: 8278
-Total matches found: 3
-
-real    0m1.673s
-user    0m0.082s
-sys     0m0.047s
+  Total IPs checked: 21
+  Total matches found: 15
 ```
+
+This utility does not have a 'silent" mode. But will return various exit values.
 
 # License
 
